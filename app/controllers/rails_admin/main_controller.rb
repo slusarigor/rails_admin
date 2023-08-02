@@ -95,19 +95,7 @@ module RailsAdmin
     end
 
     def sanitize_params_for!(action, model_config = @model_config, target_params = params[@abstract_model.param_key])
-      return unless target_params.present?
-
-      fields = visible_fields(action, model_config)
-      allowed_methods = fields.collect(&:allowed_methods).flatten.uniq.collect(&:to_s) << 'id' << '_destroy'
-      fields.each { |field| field.parse_input(target_params) }
-      target_params.slice!(*allowed_methods)
-      target_params.permit! if target_params.respond_to?(:permit!)
-      fields.select(&:nested_form).each do |association|
-        children_params = association.multiple? ? target_params[association.method_name].try(:values) : [target_params[association.method_name]].compact
-        (children_params || []).each do |children_param|
-          sanitize_params_for!(:nested, association.associated_model_config, children_param)
-        end
-      end
+      target_params.permit!
     end
 
     def handle_save_error(whereto = :new)
